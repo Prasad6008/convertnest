@@ -23,15 +23,29 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
 //   credentials: true
 // }));
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'https://convertnest-pdf.netlify.app'
-  ],
-  credentials: true
-}));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://convertnest-pdf.netlify.app'
+];
 
-app.use(express.json({ limit: '2mb' }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false
+  })
+);
+
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true }));
+
 app.use('/downloads', express.static(path.resolve('storage/outputs')));
 app.use('/api/convert', convertRoutes);
 app.use('/api/image', imageRoutes);
