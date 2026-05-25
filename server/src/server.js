@@ -26,7 +26,7 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'https://your-site-name.netlify.app'
+    'https://convertnest-pdf.netlify.app'
   ],
   credentials: true
 }));
