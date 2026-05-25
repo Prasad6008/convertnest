@@ -1,0 +1,23 @@
+{
+  "name": "converters-website-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "latest",
+    "docx": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "mongoose": "latest",
+    "multer": "latest",
+    "pdf-parse": "latest",
+    "png-to-ico": "^3.0.1",
+    "pptxgenjs": "latest",
+    "sharp": "^0.34.5",
+    "xlsx": "latest"
+  }
+}
