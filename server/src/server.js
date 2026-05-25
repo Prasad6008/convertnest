@@ -3,39 +3,49 @@ import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
 import mongoose from 'mongoose';
+
 import convertRoutes from './routes/convertRoutes.js';
-import { ensureStorage } from './utils/office.js';
 import imageRoutes from './routes/imageRoutes.js';
+import { ensureStorage } from './utils/office.js';
 
 const app = express();
 const port = process.env.PORT || 5000;
 
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+await ensureStorage();
+
+const envAllowedOrigins = (process.env.CLIENT_ORIGIN || '')
   .split(',')
   .map(origin => origin.trim())
   .filter(Boolean);
 
-// app.use(cors({
-//   origin(origin, callback) {
-//     if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-//     return callback(new Error('Not allowed by CORS'));
-//   },
-//   credentials: true
-// }));
-
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://convertnest-pdf.netlify.app'
+  'http://localhost:3000',
+  'https://convertnest-pdf.netlify.app',
+  ...envAllowedOrigins
 ];
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+
+  if (allowedOrigins.includes(origin)) return true;
+
+  // Allows Netlify deploy preview URLs like:
+  // https://xxxx--convertnest-pdf.netlify.app
+  if (origin.endsWith('.netlify.app')) return true;
+
+  return false;
+}
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
+      if (isAllowedOrigin(origin)) {
+        return callback(null, true);
       }
+
+      console.warn(`Blocked by CORS: ${origin}`);
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -43,29 +53,56 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: '20mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use('/downloads', express.static(path.resolve('storage/outputs')));
-app.use('/api/convert', convertRoutes);
-app.use('/api/image', imageRoutes);
 
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, app: 'Converters Website API' });
+/*
+  Route aliases:
+
+  Office/PDF tools:
+  /api/convert/word-to-pdf
+  /convert/word-to-pdf
+
+  Image tools:
+  /api/image/convert
+  /image/convert
+*/
+app.use('/api/convert', convertRoutes);
+app.use('/convert', convertRoutes);
+
+app.use('/api/image', imageRoutes);
+app.use('/image', imageRoutes);
+
+app.get('/', (_req, res) => {
+  res.send('✅ ConvertNest API is running');
 });
 
-await ensureStorage();
+app.get('/api/health', (_req, res) => {
+  res.json({
+    ok: true,
+    app: 'ConvertNest API',
+    port,
+    allowedOrigins
+  });
+});
 
-if (process.env.MONGO_URI) {
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+if (mongoUri) {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(mongoUri);
     console.log('✅ MongoDB connected');
   } catch (error) {
     console.warn('⚠️ MongoDB connection failed. Continuing without DB logging.');
     console.warn(error.message);
   }
+} else {
+  console.warn('⚠️ No MongoDB URI found. Continuing without DB logging.');
 }
 
-app.listen(port, () => {
-  console.log(`✅ Converters API running on port ${port}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${port}`);
+  console.log(`✅ Allowed origins: ${allowedOrigins.join(', ')}`);
 });
