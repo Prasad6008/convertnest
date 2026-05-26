@@ -2,13 +2,16 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 
-import { PDFParse } from 'pdf-parse';
-import { Document, Packer, Paragraph, TextRun } from 'docx';
-import pptxgen from 'pptxgenjs';
-import XLSX from 'xlsx';
-
 export const uploadsDir = path.resolve('storage/uploads');
 export const outputsDir = path.resolve('storage/outputs');
+
+const libreOfficePath =
+  process.env.LIBREOFFICE_PATH ||
+  (process.platform === 'win32' ? 'soffice.exe' : 'soffice');
+
+const pythonPath =
+  process.env.PYTHON_PATH ||
+  (process.platform === 'win32' ? 'python' : 'python3');
 
 export async function ensureStorage() {
   await fs.mkdir(uploadsDir, { recursive: true });
@@ -16,278 +19,172 @@ export async function ensureStorage() {
 }
 
 export function publicDownloadUrl(fileName) {
-  const base = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
-  return `${base}/downloads/${encodeURIComponent(fileName)}`;
+  const base =
+    process.env.PUBLIC_BASE_URL ||
+    `http://localhost:${process.env.PORT || 5000}`;
+
+  return `${base.replace(/\/$/, '')}/downloads/${encodeURIComponent(fileName)}`;
+}
+
+function runCommand(command, args, errorPrefix) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      windowsHide: true,
+      env: {
+        ...process.env,
+        HOME: process.env.HOME || process.cwd()
+      }
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout?.on('data', chunk => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr?.on('data', chunk => {
+      stderr += chunk.toString();
+    });
+
+    child.on('error', error => {
+      reject(new Error(`${errorPrefix} failed to start: ${error.message}`));
+    });
+
+    child.on('close', code => {
+      if (code === 0) {
+        resolve({ stdout, stderr });
+        return;
+      }
+
+      reject(
+        new Error(
+          stderr ||
+            stdout ||
+            `${errorPrefix} failed with exit code ${code}`
+        )
+      );
+    });
+  });
+}
+
+async function findLibreOfficeOutput(inputPath) {
+  const parsed = path.parse(inputPath);
+  const expectedOutputPath = path.join(outputsDir, `${parsed.name}.pdf`);
+
+  try {
+    await fs.access(expectedOutputPath);
+    return expectedOutputPath;
+  } catch {
+    // Continue searching below.
+  }
+
+  const files = await fs.readdir(outputsDir);
+
+  const matchedFile = files.find(file => {
+    const parsedFile = path.parse(file);
+
+    return (
+      parsedFile.name === parsed.name &&
+      parsedFile.ext.toLowerCase() === '.pdf'
+    );
+  });
+
+  if (!matchedFile) {
+    throw new Error('LibreOffice finished, but output PDF was not found.');
+  }
+
+  return path.join(outputsDir, matchedFile);
 }
 
 export async function convertWithLibreOffice(inputPath) {
   await ensureStorage();
-  const soffice = process.env.LIBREOFFICE_PATH || 'soffice';
 
-  await new Promise((resolve, reject) => {
-    const child = spawn(soffice, [
+  await runCommand(
+    libreOfficePath,
+    [
       '--headless',
       '--nologo',
+      '--nodefault',
       '--nofirststartwizard',
-      '--convert-to', 'pdf',
-      '--outdir', outputsDir,
+      '--nolockcheck',
+      '--norestore',
+      '--convert-to',
+      'pdf',
+      '--outdir',
+      outputsDir,
       inputPath
-    ], { windowsHide: true });
+    ],
+    'LibreOffice conversion'
+  );
 
-    let stderr = '';
-    child.stderr.on('data', chunk => { stderr += chunk.toString(); });
-    child.on('error', reject);
-    child.on('close', code => {
-      if (code === 0) resolve();
-      else reject(new Error(stderr || `LibreOffice conversion failed with code ${code}`));
-    });
-  });
-
-  const parsed = path.parse(inputPath);
-  const outputFile = `${parsed.name}.pdf`;
-  return path.join(outputsDir, outputFile);
+  return findLibreOfficeOutput(inputPath);
 }
 
-async function extractPdfText(inputPath) {
-  const buffer = await fs.readFile(inputPath);
-  const parser = new PDFParse({ data: buffer });
+function getPythonScriptPath(scriptFileName) {
+  return path.resolve(process.cwd(), 'src/utils', scriptFileName);
+}
+
+async function runPythonScript(scriptFileName, args, errorPrefix) {
+  const scriptPath = getPythonScriptPath(scriptFileName);
+
   try {
-    const parsed = await parser.getText();
-    return parsed.text || '';
-  } finally {
-    await parser.destroy();
+    await fs.access(scriptPath);
+  } catch {
+    throw new Error(`Python script not found: ${scriptFileName}`);
   }
+
+  await runCommand(
+    pythonPath,
+    [scriptPath, ...args],
+    errorPrefix
+  );
 }
 
 export async function pdfToDocx(inputPath, outputPath, mode = 'editable') {
-  const pythonCommand = process.env.PYTHON_PATH || 'python';
-  const scriptPath = path.resolve(process.cwd(), 'src/utils/pdfToWordPython.py');
+  await ensureStorage();
 
-  await new Promise((resolve, reject) => {
-    const child = spawn(
-      pythonCommand,
-      [scriptPath, inputPath, outputPath, mode],
-      { windowsHide: true }
-    );
+  await runPythonScript(
+    'pdfToWordPython.py',
+    [inputPath, outputPath, mode],
+    'Python'
+  );
 
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', chunk => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on('data', chunk => {
-      stderr += chunk.toString();
-    });
-
-    child.on('error', error => {
-      reject(new Error(`Python failed to start: ${error.message}`));
-    });
-
-    child.on('close', code => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(stderr || stdout || `PDF to Word failed with code ${code}`));
-      }
-    });
-  });
+  return outputPath;
 }
-
-// export async function pdfToPpt(inputPath, outputPath) {
-//   const pythonCommand = process.env.PYTHON_PATH || 'python';
-//   const scriptPath = path.resolve(process.cwd(), 'src/utils/pdfToPowerPointPython.py');
-
-//   await new Promise((resolve, reject) => {
-//     const child = spawn(
-//       pythonCommand,
-//       [scriptPath, inputPath, outputPath],
-//       { windowsHide: true }
-//     );
-
-//     let stdout = '';
-//     let stderr = '';
-
-//     child.stdout.on('data', chunk => {
-//       stdout += chunk.toString();
-//     });
-
-//     child.stderr.on('data', chunk => {
-//       stderr += chunk.toString();
-//     });
-
-//     child.on('error', error => {
-//       reject(new Error(`Python failed to start: ${error.message}`));
-//     });
-
-//     child.on('close', code => {
-//       if (code === 0) {
-//         resolve();
-//       } else {
-//         reject(new Error(stderr || stdout || `PDF to PowerPoint failed with code ${code}`));
-//       }
-//     });
-//   });
-// }
 
 export async function pdfToExcel(inputPath, outputPath) {
-  const pythonCommand = process.env.PYTHON_PATH || 'python';
-  const scriptPath = path.resolve(
-    process.cwd(),
-    'src/utils/pdfToExcelPython.py'
+  await ensureStorage();
+
+  await runPythonScript(
+    'pdfToExcelPython.py',
+    [inputPath, outputPath],
+    'Python'
   );
 
-  await new Promise((resolve, reject) => {
-    const child = spawn(
-      pythonCommand,
-      [scriptPath, inputPath, outputPath],
-      { windowsHide: true }
-    );
-
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', chunk => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on('data', chunk => {
-      stderr += chunk.toString();
-    });
-
-    child.on('error', error => {
-      reject(new Error(`Python failed to start: ${error.message}`));
-    });
-
-    child.on('close', code => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(stderr || stdout || `PDF to Excel failed with code ${code}`));
-      }
-    });
-  });
+  return outputPath;
 }
 
+export async function pdfToPpt(inputPath, outputPath, mode = 'editable') {
+  await ensureStorage();
 
-export async function pdfToPpt(inputPath, outputPath) {
-  const pythonCommand = process.env.PYTHON_PATH || 'python';
-  const scriptPath = path.resolve(
-    process.cwd(),
-    'src/utils/pdfToPowerPointPython.py'
+  await runPythonScript(
+    'pdfToPowerPointPython.py',
+    [inputPath, outputPath, mode],
+    'Python'
   );
 
-  await new Promise((resolve, reject) => {
-    const child = spawn(
-      pythonCommand,
-      [scriptPath, inputPath, outputPath],
-      { windowsHide: true }
-    );
-
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', chunk => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on('data', chunk => {
-      stderr += chunk.toString();
-    });
-
-    child.on('error', error => {
-      reject(new Error(`Python failed to start: ${error.message}`));
-    });
-
-    child.on('close', code => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(stderr || stdout || `PDF to PowerPoint failed with code ${code}`));
-      }
-    });
-  });
+  return outputPath;
 }
 
-
-
-
+export async function pdfToPptx(inputPath, outputPath, mode = 'editable') {
+  return pdfToPpt(inputPath, outputPath, mode);
+}
 
 export async function pdfToPptEditable(inputPath, outputPath) {
-  const pythonCommand = process.env.PYTHON_PATH || 'python';
-  const scriptPath = path.resolve(
-    process.cwd(),
-    'src/utils/pdfToPowerPointPython.py'
-  );
-
-  await new Promise((resolve, reject) => {
-    const child = spawn(
-      pythonCommand,
-      [scriptPath, inputPath, outputPath, 'editable'],
-      { windowsHide: true }
-    );
-
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', chunk => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on('data', chunk => {
-      stderr += chunk.toString();
-    });
-
-    child.on('error', error => {
-      reject(new Error(`Python failed to start: ${error.message}`));
-    });
-
-    child.on('close', code => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(stderr || stdout || `Editable PDF to PowerPoint failed with code ${code}`));
-      }
-    });
-  });
+  return pdfToPpt(inputPath, outputPath, 'editable');
 }
 
 export async function pdfToPptExact(inputPath, outputPath) {
-  const pythonCommand = process.env.PYTHON_PATH || 'python';
-  const scriptPath = path.resolve(
-    process.cwd(),
-    'src/utils/pdfToPowerPointPython.py'
-  );
-
-  await new Promise((resolve, reject) => {
-    const child = spawn(
-      pythonCommand,
-      [scriptPath, inputPath, outputPath, 'exact'],
-      { windowsHide: true }
-    );
-
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', chunk => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on('data', chunk => {
-      stderr += chunk.toString();
-    });
-
-    child.on('error', error => {
-      reject(new Error(`Python failed to start: ${error.message}`));
-    });
-
-    child.on('close', code => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(stderr || stdout || `Exact PDF to PowerPoint failed with code ${code}`));
-      }
-    });
-  });
+  return pdfToPpt(inputPath, outputPath, 'exact');
 }
