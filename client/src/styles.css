@@ -148,7 +148,7 @@ h1 {
 }
 .sidebar {
   position: sticky;
-  top: 90px;
+  top: 150px;
   align-self: start;
   padding: 18px;
 }
