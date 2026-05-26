@@ -283,8 +283,8 @@ function Header() {
             <img
               className="brand-logo"
               src="/logo-main.png"
-              width="200"
-              height="80"
+              width="300"
+              height="100"
               alt="ConvertNest"
             />
           </span>
