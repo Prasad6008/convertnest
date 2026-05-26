@@ -871,7 +871,7 @@ function Footer() {
       <div className="footer-inner">
         <div className="footer-brand-block">
           <a className="footer-brand" href="/">
-            <img src="/logo-main.png" alt="ConvertNest" />
+            <img src="/logo-footer.png" alt="ConvertNest" />
           </a>
 
           <p>
