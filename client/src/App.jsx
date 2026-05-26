@@ -282,7 +282,7 @@ function Header() {
           <span>
             <img
               className="brand-logo"
-              src="/logo.png"
+              src="/logo-main.png"
               width="200"
               height="80"
               alt="ConvertNest"
@@ -871,7 +871,7 @@ function Footer() {
       <div className="footer-inner">
         <div className="footer-brand-block">
           <a className="footer-brand" href="/">
-            <img src="/logo.png" alt="ConvertNest" />
+            <img src="/logo-main.png" alt="ConvertNest" />
           </a>
 
           <p>
