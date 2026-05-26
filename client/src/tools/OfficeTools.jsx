@@ -271,9 +271,9 @@ export default function OfficeTools({ tool }) {
           ) : null}
 
           {!['pdf-to-word', 'pdf-to-ppt'].includes(tool.id) ? (
-            // <div className="notice">
-            //   Word/PPT/Excel to PDF needs LibreOffice on the backend.
-            // </div>
+            <div className="notice">
+              {/* Word/PPT/Excel to PDF needs LibreOffice on the backend. */}
+            </div>
           ) : null}
 
       <button
