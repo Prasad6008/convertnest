@@ -1030,13 +1030,19 @@ export default function App() {
 
       if (!link) return;
 
-      const href = link.getAttribute('href');
+      const href = link.getAttribute('href') || '';
 
+      // Do not intercept download links, blob links, file links, mail, phone, external actions
       if (
         !href ||
         href.startsWith('#') ||
+        href.startsWith('blob:') ||
+        href.startsWith('data:') ||
         href.startsWith('mailto:') ||
         href.startsWith('tel:') ||
+        href.startsWith('javascript:') ||
+        link.hasAttribute('download') ||
+        link.classList.contains('download-btn') ||
         link.target === '_blank' ||
         event.metaKey ||
         event.ctrlKey ||
@@ -1048,9 +1054,24 @@ export default function App() {
 
       const url = new URL(href, window.location.href);
 
+      // Do not intercept backend/external links
       if (url.origin !== window.location.origin) return;
 
-      if (url.pathname.endsWith('.xml') || url.pathname.endsWith('.txt')) {
+      // Do not intercept files
+      if (
+        url.pathname.startsWith('/downloads/') ||
+        url.pathname.endsWith('.pdf') ||
+        url.pathname.endsWith('.docx') ||
+        url.pathname.endsWith('.pptx') ||
+        url.pathname.endsWith('.xlsx') ||
+        url.pathname.endsWith('.png') ||
+        url.pathname.endsWith('.jpg') ||
+        url.pathname.endsWith('.jpeg') ||
+        url.pathname.endsWith('.webp') ||
+        url.pathname.endsWith('.ico') ||
+        url.pathname.endsWith('.xml') ||
+        url.pathname.endsWith('.txt')
+      ) {
         return;
       }
 
