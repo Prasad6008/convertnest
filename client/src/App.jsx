@@ -14,13 +14,13 @@ import {
 } from 'lucide-react';
 
 import AdSlot from './components/AdSlot.jsx';
-import TextTools, { TEXT_TOOLS } from './tools/TextTools.jsx';
-import DeveloperTools, { DEVELOPER_TOOLS } from './tools/DeveloperTools.jsx';
-import ImageTools, { IMAGE_TOOLS } from './tools/ImageTools.jsx';
-import PdfTools, { PDF_TOOLS } from './tools/PdfTools.jsx';
-import OfficeTools, { OFFICE_TOOLS } from './tools/OfficeTools.jsx';
-import CalculatorTools, { CALCULATOR_TOOLS } from './tools/CalculatorTools.jsx';
-import QrTools, { QR_TOOLS } from './tools/QrTools.jsx';
+import TextTools, { TEXT_TOOLS } from './TextTools.jsx';
+import DeveloperTools, { DEVELOPER_TOOLS } from './DeveloperTools.jsx';
+import ImageTools, { IMAGE_TOOLS } from './ImageTools.jsx';
+import PdfTools, { PDF_TOOLS } from './PdfTools.jsx';
+import OfficeTools, { OFFICE_TOOLS } from './OfficeTools.jsx';
+import CalculatorTools, { CALCULATOR_TOOLS } from './CalculatorTools.jsx';
+import QrTools, { QR_TOOLS } from './QrTools.jsx';
 
 const categories = [
   { id: 'all', label: 'All Tools', icon: Layers, path: '/' },
@@ -32,6 +32,10 @@ const categories = [
   { id: 'calculator', label: 'Calculators', icon: Calculator, path: '/category/calculator' },
   { id: 'qr', label: 'QR Tools', icon: QrCode, path: '/category/qr' }
 ];
+
+function categoryLabel(categoryId) {
+  return categories.find(category => category.id === categoryId)?.label || 'All Tools';
+}
 
 const staticPages = {
   about: {
@@ -72,6 +76,100 @@ const staticPages = {
       'ConvertNest may use cookies for analytics, preferences and advertising after approval. Add your full cookie policy before enabling ads or tracking services.'
   }
 };
+
+const SEO_SLUGS = {
+  // PDF tools
+  'merge-pdf': 'merge-pdf',
+  'split-pdf': 'split-pdf',
+  'extract-pages': 'extract-pdf-pages',
+  'remove-pages': 'remove-pdf-pages',
+  'rotate-pdf': 'rotate-pdf',
+  'watermark-pdf': 'watermark-pdf',
+  'page-numbers': 'pdf-page-numbers',
+  'compress-pdf': 'compress-pdf',
+
+  // Image tools
+  'jpg-png-webp': 'image-format-converter',
+  'image-compressor': 'image-compressor',
+  'image-resizer': 'image-resizer',
+  'image-to-pdf': 'image-to-pdf-converter',
+  'image-to-base64': 'image-to-base64-converter',
+  'base64-to-image': 'base64-to-image-converter',
+  'image-color-picker': 'image-color-picker',
+
+  // Text tools
+  'uppercase-to-lowercase': 'uppercase-to-lowercase-converter',
+  'lowercase-to-uppercase': 'lowercase-to-uppercase-converter',
+  'title-case': 'title-case-converter',
+  'sentence-case': 'sentence-case-converter',
+  'capitalize-words': 'capitalize-words',
+  'inverse-case': 'inverse-case-converter',
+  'alternating-case': 'alternating-case-converter',
+  'slug-generator': 'slug-generator',
+  'remove-extra-spaces': 'remove-extra-spaces',
+  'reverse-text': 'reverse-text--converter',
+  'sort-lines': 'sort-lines',
+  'remove-duplicate-lines': 'remove-duplicate-lines',
+  'word-counter': 'word-counter',
+  'text-to-base64': 'text-to-base64-converter',
+  'base64-to-text': 'base64-to-text-converter',
+
+  // Developer tools
+  'json-formatter': 'json-formatter',
+  'json-minifier': 'json-minifier',
+  'json-validator': 'json-validator',
+  'xml-formatter': 'xml-formatter',
+  'html-encoder': 'html-encoder',
+  'html-decoder': 'html-decoder',
+  'url-encoder': 'url-encoder',
+  'url-decoder': 'url-decoder',
+  'css-minifier': 'css-minifier',
+  'javascript-minifier': 'javascript-minifier',
+  'base64-encoder': 'base64-encoder',
+  'base64-decoder': 'base64-decoder',
+  'jwt-decoder': 'jwt-decoder',
+  'uuid-generator': 'uuid-generator',
+  'timestamp-converter': 'timestamp-converter',
+
+  // Calculator tools
+  'gst-calculator': 'gst-calculator',
+  'emi-calculator': 'emi-calculator',
+  'discount-calculator': 'discount-calculator',
+  'percentage-calculator': 'percentage-calculator',
+  'length-converter': 'length-converter',
+  'weight-converter': 'weight-converter',
+  'temperature-converter': 'temperature-converter',
+  'data-storage': 'data-storage-converter',
+  'date-difference': 'date-difference-calculator',
+  'number-to-words': 'number-to-words-converter'
+};
+
+const SLUG_TO_TOOL_ID = Object.fromEntries(
+  Object.entries(SEO_SLUGS).map(([toolId, slug]) => [slug, toolId])
+);
+
+function toolPath(toolId) {
+  const slug = SEO_SLUGS[toolId] || `${toolId}-converter`;
+  return `/${slug}`;
+}
+
+function toolIdFromSlug(slug) {
+  if (!slug) return null;
+
+  if (SLUG_TO_TOOL_ID[slug]) {
+    return SLUG_TO_TOOL_ID[slug];
+  }
+
+  if (slug.endsWith('-converter')) {
+    return slug.replace(/-converter$/, '');
+  }
+
+  if (slug.endsWith('-convertor')) {
+    return slug.replace(/-convertor$/, '');
+  }
+
+  return null;
+}
 
 const allTools = [
   ...PDF_TOOLS.map(tool => ({
@@ -125,14 +223,40 @@ const allTools = [
   }))
 ].map(tool => ({
   ...tool,
-  path: `/tools/${tool.id}`
+  path: toolPath(tool.id)
 }));
 
 function getRoute() {
   const path = window.location.pathname.replace(/\/$/, '') || '/';
   const parts = path.split('/').filter(Boolean);
 
+  // New SEO tool URLs:
+  // /merge-pdf
+  // /extract-pdf-pages
+  // /image-compressor
+  if (parts.length === 1) {
+    const toolId = toolIdFromSlug(parts[0]);
+
+    if (toolId) {
+      const correctPath = toolPath(toolId);
+
+      if (window.location.pathname !== correctPath) {
+        window.history.replaceState({}, '', correctPath);
+      }
+
+      return { type: 'tool', toolId, category: 'all', pageId: null };
+    }
+  }
+
+  // Old URL support:
+  // /tools/merge-pdf → /merge-pdf
   if (parts[0] === 'tools' && parts[1]) {
+    const newPath = toolPath(parts[1]);
+
+    if (window.location.pathname !== newPath) {
+      window.history.replaceState({}, '', newPath);
+    }
+
     return { type: 'tool', toolId: parts[1], category: 'all', pageId: null };
   }
 
@@ -149,10 +273,6 @@ function getRoute() {
   }
 
   return { type: 'home', category: 'all', toolId: null, pageId: null };
-}
-
-function categoryLabel(categoryId) {
-  return categories.find(category => category.id === categoryId)?.label || 'All Tools';
 }
 
 function makeTitle(tool) {
@@ -880,23 +1000,23 @@ function Footer() {
           </p>
 
           <div className="footer-contact-list">
-            <a href="mailto:hello@convertnest.com">
+            <a href="mailto:support@convertpdfonline.in">
               <span className="footer-mini-icon">✉</span>
-              hello@convertnest.com
+              support@convertpdfonline.in 
             </a>
 
-            <a href="tel:+910000000000">
+            {/* <a href="tel:+910000000000">
               <span className="footer-mini-icon">☎</span>
               +91 00000 00000
-            </a>
+            </a> */}
 
             <span>
-              <span className="footer-mini-icon">⌖</span>
+              <span className="footer-mini-icon"><img style={{ width: 16, height: 16 }} src="/public/location.png" alt="India" /></span>
               India
             </span>
           </div>
 
-         <div className="footer-socials">
+         {/* <div className="footer-socials">
             {footerSocialLinks.map(item => (
               <a
                 key={item.label}
@@ -915,7 +1035,7 @@ function Footer() {
                 />
               </a>
             ))}
-          </div>
+          </div> */}
         </div>
 
         <div className="footer-column">
