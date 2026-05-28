@@ -1010,10 +1010,10 @@ function Footer() {
               +91 00000 00000
             </a> */}
 
-            <span>
+            {/* <span>
               <span className="footer-mini-icon"><img style={{ width: 16, height: 16 }} src="/public/location.png" alt="India" /></span>
               India
-            </span>
+            </span> */}
           </div>
 
          {/* <div className="footer-socials">
