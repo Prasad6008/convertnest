@@ -69,6 +69,22 @@ app.use('/downloads', express.static(path.resolve('storage/outputs')));
   /api/image/convert
   /image/convert
 */
+// MongoDB Connection
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+
+if (mongoUri) {
+  try {
+    await mongoose.connect(mongoUri);
+    console.log('✅ MongoDB connected');
+  } catch (error) {
+    console.warn('⚠️ MongoDB connection failed. Continuing without DB logging.');
+    console.warn(error.message);
+  }
+} else {
+  console.warn('⚠️ No MongoDB URI found. Continuing without DB logging.');
+}
+
+// Routes:
 app.use('/api/convert', convertRoutes);
 app.use('/convert', convertRoutes);
 
@@ -88,19 +104,7 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
 
-if (mongoUri) {
-  try {
-    await mongoose.connect(mongoUri);
-    console.log('✅ MongoDB connected');
-  } catch (error) {
-    console.warn('⚠️ MongoDB connection failed. Continuing without DB logging.');
-    console.warn(error.message);
-  }
-} else {
-  console.warn('⚠️ No MongoDB URI found. Continuing without DB logging.');
-}
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`✅ Server running on port ${port}`);
