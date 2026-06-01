@@ -104,6 +104,18 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
+// Add this before app.listen
+app.get('/api/test-db', async (_req, res) => {
+  try {
+    const UsageLog = (await import('./models/UsageLog.js')).default;
+    console.log('readyState:', mongoose.connection.readyState);
+    const doc = await UsageLog.create({ tool: 'test', inputFileName: 'test.pdf' });
+    res.json({ ok: true, id: doc._id });
+  } catch (err) {
+    res.json({ ok: false, error: err.message });
+  }
+});
+
 
 
 app.listen(port, '0.0.0.0', () => {
