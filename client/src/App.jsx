@@ -395,19 +395,63 @@ function Sidebar({ activeCategory }) {
 }
 
 function Header() {
+  const [isToolsOpen, setIsToolsOpen] = React.useState(false);
+  const dropdownRef = React.useRef(null);
+
+  const menuCategories = categories.filter(category => category.id !== 'all');
+
+  const popularToolIds = [
+    'merge-pdf',
+    'split-pdf',
+    'compress-pdf',
+    'word-to-pdf',
+    'pdf-to-word',
+    'image-compressor',
+    'image-resizer',
+    'json-formatter',
+    'word-counter',
+    'text-qr'
+  ];
+
+  const popularTools = popularToolIds
+    .map(id => allTools.find(tool => tool.id === id))
+    .filter(Boolean);
+
+  React.useEffect(() => {
+    function handleClickOutside(event) {
+      if (!dropdownRef.current) return;
+
+      if (!dropdownRef.current.contains(event.target)) {
+        setIsToolsOpen(false);
+      }
+    }
+
+    function handleEscape(event) {
+      if (event.key === 'Escape') {
+        setIsToolsOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, []);
+
   return (
     <header className="header">
       <div className="header-inner">
         <a className="brand" href="/">
-          <span>
-            <img
-              className="brand-logo"
-              src="/logo-main.png"
-              width="300"
-              height="100"
-              alt="ConvertNest"
-            />
-          </span>
+          <img
+            className="brand-logo"
+            src="/logo-main.png"
+            width="300"
+            height="100"
+            alt="ConvertNest"
+          />
         </a>
 
         <nav className="header-actions">
@@ -415,11 +459,106 @@ function Header() {
             <Home size={16} /> Home
           </a>
 
-          <span className="header-pill">
+          <div className="header-dropdown" ref={dropdownRef}>
+            <button
+              type="button"
+              className={`header-pill header-dropdown-btn ${isToolsOpen ? 'active' : ''}`}
+              onClick={() => setIsToolsOpen(prev => !prev)}
+              aria-expanded={isToolsOpen}
+            >
+              <Layers size={16} />
+              Tools
+              <ChevronDown
+                size={16}
+                className={`dropdown-chevron ${isToolsOpen ? 'open' : ''}`}
+              />
+            </button>
+
+            {isToolsOpen ? (
+              <div className="mega-menu">
+                <div className="mega-menu-intro">
+                  <p className="eyebrow">Tool Library</p>
+
+                  <h3>Choose any converter</h3>
+
+                  <p>
+                    Browse PDF, office, image, text, developer, calculator and QR tools
+                    from one clean menu.
+                  </p>
+
+                  <a
+                    className="mega-all-tools"
+                    href="/"
+                    onClick={() => setIsToolsOpen(false)}
+                  >
+                    View all {allTools.length}+ tools →
+                  </a>
+                </div>
+
+                <div className="mega-category-grid">
+                  {menuCategories.map(category => {
+                    const Icon = category.icon;
+                    const categoryTools = allTools
+                      .filter(tool => tool.category === category.id)
+                      .slice(0, 5);
+
+                    const totalCount = allTools.filter(
+                      tool => tool.category === category.id
+                    ).length;
+
+                    return (
+                      <div className="mega-category" key={category.id}>
+                        <a
+                          className="mega-category-title"
+                          href={category.path}
+                          onClick={() => setIsToolsOpen(false)}
+                        >
+                          <span>
+                            <Icon size={17} />
+                            {category.label}
+                          </span>
+
+                          <small>{totalCount}</small>
+                        </a>
+
+                        <div className="mega-tool-links">
+                          {categoryTools.map(tool => (
+                            <a
+                              key={tool.id}
+                              href={tool.path}
+                              onClick={() => setIsToolsOpen(false)}
+                            >
+                              {tool.title}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mega-popular">
+                  <span>Popular:</span>
+
+                  {popularTools.map(tool => (
+                    <a
+                      key={tool.id}
+                      href={tool.path}
+                      onClick={() => setIsToolsOpen(false)}
+                    >
+                      {tool.title}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <span className="header-pill hide-on-mobile">
             <ShieldCheck size={16} /> Local-first tools
           </span>
 
-          <span className="header-pill">
+          <span className="header-pill hide-on-mobile">
             <Sparkles size={16} /> SEO pages
           </span>
         </nav>
