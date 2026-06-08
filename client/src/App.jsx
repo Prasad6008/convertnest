@@ -555,13 +555,14 @@ function Header() {
             ) : null}
           </div>
 
-          <span className="header-pill hide-on-mobile">
+          {/* <span className="header-pill hide-on-mobile">
             <ShieldCheck size={16} /> Local-first tools
-          </span>
+          </span> */}
 
-          <span className="header-pill hide-on-mobile">
+          {/* <span className="header-pill hide-on-mobile">
             <Sparkles size={16} /> SEO pages
-          </span>
+          </span> */}
+          
         </nav>
       </div>
     </header>
