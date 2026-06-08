@@ -682,7 +682,7 @@ function HomePage({ route }) {
         <Sidebar activeCategory={activeCategory} />
 
         <section className="content">
-          <AdSlot label="Top banner advertisement" />
+          {/* <AdSlot label="Top banner advertisement" /> */}
 
           <div className="section-head category-search-head">
             <div>
@@ -725,7 +725,7 @@ function HomePage({ route }) {
             <div className="notice">No tools found. Try another keyword.</div>
           ) : null}
 
-          <AdSlot label="Bottom advertisement" />
+          {/* <AdSlot label="Bottom advertisement" /> */}
         </section>
       </main>
     </>
