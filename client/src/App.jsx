@@ -1213,7 +1213,7 @@ function Footer() {
             <a href="/terms-and-conditions">Terms & Conditions</a>
             <a href="/disclaimer">Disclaimer</a>
             <a href="/cookie-policy">Cookie Policy</a>
-            <a href="/sitemap.xml">Sitemap</a>
+            {/* <a href="/sitemap.xml">Sitemap</a> */}
           </div>
         </div>
       </div>
