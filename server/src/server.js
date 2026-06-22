@@ -10,6 +10,7 @@ import { ensureStorage } from './utils/office.js';
 
 const app = express();
 const port =
+  process.env.CLIENT_ORIGIN ||
   process.env.X_ZOHO_CATALYST_LISTEN_PORT ||
   process.env.PORT ||
   9000;
