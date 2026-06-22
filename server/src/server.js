@@ -9,7 +9,10 @@ import imageRoutes from './routes/imageRoutes.js';
 import { ensureStorage } from './utils/office.js';
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port =
+  process.env.X_ZOHO_CATALYST_LISTEN_PORT ||
+  process.env.PORT ||
+  9000;
 
 await ensureStorage();
 
