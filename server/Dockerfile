@@ -28,5 +28,8 @@ RUN python3 -m pip install --break-system-packages \
 ENV NODE_ENV=production
 ENV LIBREOFFICE_PATH=soffice
 ENV PYTHON_PATH=python3
+ENV PORT=9000
+
+EXPOSE 9000
 
 CMD ["npm", "start"]
