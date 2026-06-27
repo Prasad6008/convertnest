@@ -1,0 +1,24 @@
+name: Export Backend Docker Archive
+
+on:
+  workflow_dispatch:
+
+jobs:
+  export-docker-archive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build backend Docker image
+        run: docker build -t convertnest-api:latest ./server
+
+      - name: Save Docker image as archive
+        run: docker save convertnest-api:latest -o convertnest-api.tar
+
+      - name: Upload Docker archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: convertnest-api-docker-archive
+          path: convertnest-api.tar
