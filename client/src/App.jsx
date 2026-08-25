@@ -424,7 +424,7 @@ function Header() {
           </span>
         </a>
 
-        <nav className="header-actions">
+        {/* <nav className="header-actions">
           <a className="header-pill" href="/">
             <Home size={16} /> Home
           </a>
@@ -436,7 +436,7 @@ function Header() {
           <span className="header-pill">
             <Sparkles size={16} /> SEO pages
           </span>
-        </nav>
+        </nav> */}
       </div>
     </header>
   );
