@@ -6,7 +6,9 @@ import mongoose from 'mongoose';
 
 import convertRoutes from './routes/convertRoutes.js';
 import imageRoutes from './routes/imageRoutes.js';
+import seoRoutes from './routes/seoRoutes.js';
 import { ensureStorage } from './utils/office.js';
+
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -90,6 +92,8 @@ app.use('/convert', convertRoutes);
 
 app.use('/api/image', imageRoutes);
 app.use('/image', imageRoutes);
+
+app.use('/api/seo', seoRoutes);
 
 app.get('/', (_req, res) => {
   res.send('✅ ConvertNest API is running');
