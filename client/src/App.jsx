@@ -598,7 +598,7 @@ function HomePage({ route }) {
             <div className="notice">No tools found. Try another keyword.</div>
           ) : null}
 
-          <AdSlot label="Bottom advertisement" />
+          {/* <AdSlot label="Bottom advertisement" /> */}
         </section>
       </main>
     </>
