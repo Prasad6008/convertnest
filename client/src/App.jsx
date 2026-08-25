@@ -50,7 +50,7 @@ const staticPages = {
     title: 'Contact',
     description: 'Contact ConvertNest for support, feedback or business enquiries.',
     content:
-      'For support, feedback or business enquiries, contact us at hello@convertnest.com. Replace this email with your official business email before publishing.'
+      'For support, feedback or business enquiries, contact us at support@convenpdfonline.in'
   },
   'privacy-policy': {
     title: 'Privacy Policy',
