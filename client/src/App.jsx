@@ -737,6 +737,33 @@ function ToolPage({ tool }) {
     .filter(item => item.category === tool.category && item.id !== tool.id)
     .slice(0, 6);
 
+  const [seoData, setSeoData] = React.useState(null);
+
+  const seoSlug = SEO_SLUGS[tool.id];
+  
+  React.useEffect(() => {
+    let cancelled = false;
+  
+    async function loadSeo() {
+      if (!seoSlug) {
+        setSeoData(null);
+        return;
+      }
+  
+      const data = await fetchSeoContent(seoSlug);
+  
+      if (!cancelled) {
+        setSeoData(data);
+      }
+    }
+  
+    loadSeo();
+  
+    return () => {
+      cancelled = true;
+    };
+  }, [seoSlug]);
+
   React.useEffect(() => {
     document.title = makeTitle(tool);
     updateMeta('description', makeDescription(tool));
