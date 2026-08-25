@@ -786,7 +786,7 @@ function ToolPage({ tool }) {
         <div className="tool-hero-card">
           <div>
             <p className="eyebrow">Free online converter</p>
-            <h1>{tool.title}</h1>
+            <h1>{seoData?.h1 || tool.title}</h1>
             <p className="main-copy">{makeDescription(tool)}</p>
           </div>
 
