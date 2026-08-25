@@ -81,22 +81,22 @@ const staticPages = {
 const SEO_SLUGS = {
   // PDF tools
   'merge-pdf': 'merge-pdf-converter',
-  'split-pdf': 'split-pdf',
-  'extract-pages': 'extract-pdf-pages',
-  'remove-pages': 'remove-pdf-pages',
-  'rotate-pdf': 'rotate-pdf',
-  'watermark-pdf': 'watermark-pdf',
-  'page-numbers': 'pdf-page-numbers',
-  'compress-pdf': 'compress-pdf',
+  'split-pdf': 'split-pdf-converter',
+  'extract-pages': 'extract-pages-converter',
+  'remove-pages': 'remove-pages-converter',
+  'rotate-pdf': 'rotate-pdf-converter',
+  'watermark-pdf': 'watermark-pdf-converter',
+  'page-numbers': 'page-numbers-converter',
+  'compress-pdf': 'compress-pdf-converter',
 
   // Image tools
-  'jpg-png-webp': 'image-format-converter',
-  'image-compressor': 'image-compressor',
-  'image-resizer': 'image-resizer',
+  'jpg-png-webp': 'jpg-png-webp-converter',
+  'image-compressor': 'image-compressor-converter',
+  'image-resizer': 'image-resizer-converter',
   'image-to-pdf': 'image-to-pdf-converter',
   'image-to-base64': 'image-to-base64-converter',
   'base64-to-image': 'base64-to-image-converter',
-  'image-color-picker': 'image-color-picker',
+  'image-color-picker': 'image-color-picker-converter',
 
   // Text tools
   'uppercase-to-lowercase': 'uppercase-to-lowercase-converter',
@@ -106,42 +106,42 @@ const SEO_SLUGS = {
   'capitalize-words': 'capitalize-words',
   'inverse-case': 'inverse-case-converter',
   'alternating-case': 'alternating-case-converter',
-  'slug-generator': 'slug-generator',
-  'remove-extra-spaces': 'remove-extra-spaces',
-  'reverse-text': 'reverse-text--converter',
-  'sort-lines': 'sort-lines',
+  'slug-generator': 'slug-generator-converter',
+  'remove-extra-spaces': 'remove-extra-spaces-converter',
+  'reverse-text': 'reverse-text-converter',
+  'sort-lines': 'sort-lines-converter',
   'remove-duplicate-lines': 'remove-duplicate-lines',
-  'word-counter': 'word-counter',
+  'word-counter': 'word-counter-converter',
   'text-to-base64': 'text-to-base64-converter',
   'base64-to-text': 'base64-to-text-converter',
 
   // Developer tools
-  'json-formatter': 'json-formatter',
-  'json-minifier': 'json-minifier',
-  'json-validator': 'json-validator',
-  'xml-formatter': 'xml-formatter',
-  'html-encoder': 'html-encoder',
-  'html-decoder': 'html-decoder',
-  'url-encoder': 'url-encoder',
-  'url-decoder': 'url-decoder',
-  'css-minifier': 'css-minifier',
-  'javascript-minifier': 'javascript-minifier',
-  'base64-encoder': 'base64-encoder',
-  'base64-decoder': 'base64-decoder',
-  'jwt-decoder': 'jwt-decoder',
-  'uuid-generator': 'uuid-generator',
-  'timestamp-converter': 'timestamp-converter',
+  'json-formatter': 'json-formatter-converter',
+  'json-minifier': 'json-minifier-converter',
+  'json-validator': 'json-validator-converter',
+  'xml-formatter': 'xml-formatter-converter',
+  'html-encoder': 'html-encoder-converter',
+  'html-decoder': 'html-decoder-converter',
+  'url-encoder': 'url-encode-converter',
+  'url-decoder': 'url-decode-converter',
+  'css-minifier': 'css-minifier-converter',
+  'javascript-minifier': 'javascript-minifier-converter',
+  'base64-encoder': 'base64-encode-converter',
+  'base64-decoder': 'base64-decode-converter',
+  'jwt-decoder': 'jwt-decoder-converter',
+  'uuid-generator': 'uuid-generator-converter',
+  'timestamp-converter': 'timestamp-converter-converter',
 
   // Calculator tools
-  'gst-calculator': 'gst-calculator',
-  'emi-calculator': 'emi-calculator',
-  'discount-calculator': 'discount-calculator',
-  'percentage-calculator': 'percentage-calculator',
-  'length-converter': 'length-converter',
-  'weight-converter': 'weight-converter',
-  'temperature-converter': 'temperature-converter',
+  'gst-calculator': 'gst-calculator-converter',
+  'emi-calculator': 'emi-calculator-converter',
+  'discount-calculator': 'discount-calculator-converter',
+  'percentage-calculator': 'percentage-calculator-converter',
+  'length-converter': 'length-converter-converter',
+  'weight-converter': 'weight-converter-converter',
+  'temperature-converter': 'temperature-converter-converter',
   'data-storage': 'data-storage-converter',
-  'date-difference': 'date-difference-calculator',
+  'date-difference': 'date-difference-converter',
   'number-to-words': 'number-to-words-converter'
 };
 
@@ -157,16 +157,29 @@ function toolPath(toolId) {
 function toolIdFromSlug(slug) {
   if (!slug) return null;
 
+  // Current SEO slug -> tool ID
   if (SLUG_TO_TOOL_ID[slug]) {
     return SLUG_TO_TOOL_ID[slug];
   }
 
+  // Backward compatibility: allow the original tool ID as a URL.
+  // It will be redirected to the current SEO-friendly path by getRoute().
+  if (Object.prototype.hasOwnProperty.call(SEO_SLUGS, slug)) {
+    return slug;
+  }
+
   if (slug.endsWith('-converter')) {
-    return slug.replace(/-converter$/, '');
+    const possibleToolId = slug.replace(/-converter$/, '');
+    if (Object.prototype.hasOwnProperty.call(SEO_SLUGS, possibleToolId)) {
+      return possibleToolId;
+    }
   }
 
   if (slug.endsWith('-convertor')) {
-    return slug.replace(/-convertor$/, '');
+    const possibleToolId = slug.replace(/-convertor$/, '');
+    if (Object.prototype.hasOwnProperty.call(SEO_SLUGS, possibleToolId)) {
+      return possibleToolId;
+    }
   }
 
   return null;
@@ -597,43 +610,66 @@ function ToolPage({ tool }) {
     .filter(item => item.category === tool.category && item.id !== tool.id)
     .slice(0, 6);
 
-    const [seoData, setSeoData] = React.useState(null);
+  const [seoData, setSeoData] = React.useState(null);
+  const [seoLoading, setSeoLoading] = React.useState(true);
 
-    const seoSlug = SEO_SLUGS[tool.id];
+  const seoSlug = SEO_SLUGS[tool.id] || `${tool.id}-converter`;
 
-    React.useEffect(() => {
-      let cancelled = false;
+  React.useEffect(() => {
+    let cancelled = false;
 
-      async function loadSeo() {
-        if (!seoSlug) {
-          setSeoData(null);
-          return;
-        }
+    // Clear old SEO content immediately when changing tools
+    setSeoData(null);
+    setSeoLoading(true);
 
+    async function loadSeo() {
+      try {
         const data = await fetchSeoContent(seoSlug);
 
         if (!cancelled) {
           setSeoData(data);
         }
+      } catch (error) {
+        console.error('Failed to load SEO content:', error);
+
+        if (!cancelled) {
+          setSeoData(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setSeoLoading(false);
+        }
       }
+    }
 
-      loadSeo();
+    loadSeo();
 
-      return () => {
-        cancelled = true;
-      };
-    }, [seoSlug]);
+    return () => {
+      cancelled = true;
+    };
+  }, [seoSlug]);
 
-    React.useEffect(() => {
-      document.title = seoData?.seoTitle || makeTitle(tool);
+  React.useEffect(() => {
+    if (seoLoading) return;
 
-      updateMeta(
-        'description',
-        seoData?.metaDescription || makeDescription(tool)
-      );
+    document.title = seoData?.seoTitle || makeTitle(tool);
 
-      updateMeta('robots', 'index, follow');
-    }, [tool, seoData]);
+    updateMeta(
+      'description',
+      seoData?.metaDescription || makeDescription(tool)
+    );
+
+    updateMeta('robots', 'index, follow');
+  }, [tool, seoData, seoLoading]);
+
+  const seoParagraphs = React.useMemo(() => {
+    if (!seoData?.seoContent) return [];
+
+    return String(seoData.seoContent)
+      .split(/\n\s*\n|\r?\n/)
+      .map(text => text.trim())
+      .filter(Boolean);
+  }, [seoData]);
 
   return (
     <>
@@ -641,7 +677,9 @@ function ToolPage({ tool }) {
         <div className="breadcrumb">
           <a href="/">Home</a>
           <span>/</span>
-          <a href={`/category/${tool.category}`}>{categoryLabel(tool.category)}</a>
+          <a href={`/category/${tool.category}`}>
+            {categoryLabel(tool.category)}
+          </a>
           <span>/</span>
           <strong>{tool.title}</strong>
         </div>
@@ -649,8 +687,37 @@ function ToolPage({ tool }) {
         <div className="tool-hero-card">
           <div>
             <p className="eyebrow">Free online converter</p>
-            <h1>{seoData?.h1 || tool.title}</h1>
-            <p className="main-copy">{makeDescription(tool)}</p>
+
+            {seoLoading ? (
+              <>
+                <div
+                  style={{
+                    height: '64px',
+                    width: '60%',
+                    background: '#f1f1f1',
+                    borderRadius: '8px',
+                    marginBottom: '20px'
+                  }}
+                />
+
+                <div
+                  style={{
+                    height: '24px',
+                    width: '85%',
+                    background: '#f1f1f1',
+                    borderRadius: '6px'
+                  }}
+                />
+              </>
+            ) : (
+              <>
+                <h1>{seoData?.h1 || tool.title}</h1>
+
+                <p className="main-copy">
+                  {seoData?.metaDescription || makeDescription(tool)}
+                </p>
+              </>
+            )}
           </div>
 
           <span className="badge big-badge">{tool.badge}</span>
@@ -678,20 +745,45 @@ function ToolPage({ tool }) {
           </section>
 
           <section className="seo-content-card">
-            <h2>How to use {tool.title}</h2>
+            {seoLoading ? (
+              <div>
+                <p>Loading SEO content...</p>
+              </div>
+            ) : seoParagraphs.length ? (
+              <>
+                <h2>{seoData?.h1 || tool.title}</h2>
 
-            <ol>
-              <li>Upload or paste your input in the tool workspace.</li>
-              <li>Choose the required options if the tool asks for settings.</li>
-              <li>Click the action button and wait for the result.</li>
-              <li>Preview, copy or download the converted output.</li>
-            </ol>
+                {seoParagraphs.map((paragraph, index) => (
+                  <p key={`${seoSlug}-seo-${index}`}>
+                    {paragraph}
+                  </p>
+                ))}
+              </>
+            ) : (
+              <>
+                <h2>How to use {tool.title}</h2>
 
-            <p>
-              This page has a dedicated URL for SEO, so you can submit it to
-              search engines, create a sitemap and run advertisements on this
-              individual converter page.
-            </p>
+                <ol>
+                  <li>
+                    Upload or paste your input in the tool workspace.
+                  </li>
+                  <li>
+                    Choose the required options if the tool asks for settings.
+                  </li>
+                  <li>
+                    Click the action button and wait for the result.
+                  </li>
+                  <li>
+                    Preview, copy or download the converted output.
+                  </li>
+                </ol>
+
+                <p>
+                  Use this free {tool.title.toLowerCase()} tool online with a
+                  simple, fast and user-friendly interface.
+                </p>
+              </>
+            )}
           </section>
 
           {related.length ? (
