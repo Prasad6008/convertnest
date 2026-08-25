@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   Calculator,
-  ChevronDown,
   Code2,
   FileText,
   Home,
@@ -15,6 +14,7 @@ import {
 } from 'lucide-react';
 
 import AdSlot from './components/AdSlot.jsx';
+import { fetchSeoContent } from './utils/seo.js';
 import TextTools, { TEXT_TOOLS } from './TextTools.jsx';
 import DeveloperTools, { DEVELOPER_TOOLS } from './DeveloperTools.jsx';
 import ImageTools, { IMAGE_TOOLS } from './ImageTools.jsx';
@@ -50,7 +50,7 @@ const staticPages = {
     title: 'Contact',
     description: 'Contact ConvertNest for support, feedback or business enquiries.',
     content:
-      'For support, feedback or business enquiries, contact us at support@convenpdfonline.in'
+      'For support, feedback or business enquiries, contact us at support@convenpdfonline.in.'
   },
   'privacy-policy': {
     title: 'Privacy Policy',
@@ -80,7 +80,7 @@ const staticPages = {
 
 const SEO_SLUGS = {
   // PDF tools
-  'merge-pdf': 'merge-pdf',
+  'merge-pdf': 'merge-pdf-converter',
   'split-pdf': 'split-pdf',
   'extract-pages': 'extract-pdf-pages',
   'remove-pages': 'remove-pdf-pages',
@@ -396,63 +396,19 @@ function Sidebar({ activeCategory }) {
 }
 
 function Header() {
-  const [isToolsOpen, setIsToolsOpen] = React.useState(false);
-  const dropdownRef = React.useRef(null);
-
-  const menuCategories = categories.filter(category => category.id !== 'all');
-
-  const popularToolIds = [
-    'merge-pdf',
-    'split-pdf',
-    'compress-pdf',
-    'word-to-pdf',
-    'pdf-to-word',
-    'image-compressor',
-    'image-resizer',
-    'json-formatter',
-    'word-counter',
-    'text-qr'
-  ];
-
-  const popularTools = popularToolIds
-    .map(id => allTools.find(tool => tool.id === id))
-    .filter(Boolean);
-
-  React.useEffect(() => {
-    function handleClickOutside(event) {
-      if (!dropdownRef.current) return;
-
-      if (!dropdownRef.current.contains(event.target)) {
-        setIsToolsOpen(false);
-      }
-    }
-
-    function handleEscape(event) {
-      if (event.key === 'Escape') {
-        setIsToolsOpen(false);
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, []);
-
   return (
     <header className="header">
       <div className="header-inner">
         <a className="brand" href="/">
-          <img
-            className="brand-logo"
-            src="/logo-main.png"
-            width="300"
-            height="100"
-            alt="ConvertNest"
-          />
+          <span>
+            <img
+              className="brand-logo"
+              src="/logo-main.png"
+              width="300"
+              height="100"
+              alt="ConvertNest"
+            />
+          </span>
         </a>
 
         <nav className="header-actions">
@@ -460,109 +416,13 @@ function Header() {
             <Home size={16} /> Home
           </a>
 
-          <div className="header-dropdown" ref={dropdownRef}>
-            <button
-              type="button"
-              className={`header-pill header-dropdown-btn ${isToolsOpen ? 'active' : ''}`}
-              onClick={() => setIsToolsOpen(prev => !prev)}
-              aria-expanded={isToolsOpen}
-            >
-              <Layers size={16} />
-              Tools
-              <ChevronDown
-                size={16}
-                className={`dropdown-chevron ${isToolsOpen ? 'open' : ''}`}
-              />
-            </button>
-
-            {isToolsOpen ? (
-              <div className="mega-menu">
-                <div className="mega-menu-intro">
-                  <p className="eyebrow">Tool Library</p>
-
-                  <h3>Choose any converter</h3>
-
-                  <p>
-                    Browse PDF, office, image, text, developer, calculator and QR tools
-                    from one clean menu.
-                  </p>
-
-                  <a
-                    className="mega-all-tools"
-                    href="/"
-                    onClick={() => setIsToolsOpen(false)}
-                  >
-                    View all {allTools.length}+ tools →
-                  </a>
-                </div>
-
-                <div className="mega-category-grid">
-                  {menuCategories.map(category => {
-                    const Icon = category.icon;
-                    const categoryTools = allTools
-                      .filter(tool => tool.category === category.id)
-                      .slice(0, 5);
-
-                    const totalCount = allTools.filter(
-                      tool => tool.category === category.id
-                    ).length;
-
-                    return (
-                      <div className="mega-category" key={category.id}>
-                        <a
-                          className="mega-category-title"
-                          href={category.path}
-                          onClick={() => setIsToolsOpen(false)}
-                        >
-                          <span>
-                            <Icon size={17} />
-                            {category.label}
-                          </span>
-
-                          <small>{totalCount}</small>
-                        </a>
-
-                        <div className="mega-tool-links">
-                          {categoryTools.map(tool => (
-                            <a
-                              key={tool.id}
-                              href={tool.path}
-                              onClick={() => setIsToolsOpen(false)}
-                            >
-                              {tool.title}
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mega-popular">
-                  <span>Popular:</span>
-
-                  {popularTools.map(tool => (
-                    <a
-                      key={tool.id}
-                      href={tool.path}
-                      onClick={() => setIsToolsOpen(false)}
-                    >
-                      {tool.title}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          {/* <span className="header-pill hide-on-mobile">
+          <span className="header-pill">
             <ShieldCheck size={16} /> Local-first tools
-          </span> */}
+          </span>
 
-          {/* <span className="header-pill hide-on-mobile">
+          <span className="header-pill">
             <Sparkles size={16} /> SEO pages
-          </span> */}
-          
+          </span>
         </nav>
       </div>
     </header>
@@ -682,7 +542,7 @@ function HomePage({ route }) {
         <Sidebar activeCategory={activeCategory} />
 
         <section className="content">
-          {/* <AdSlot label="Top banner advertisement" /> */}
+          <AdSlot label="Top banner advertisement" />
 
           <div className="section-head category-search-head">
             <div>
@@ -725,7 +585,7 @@ function HomePage({ route }) {
             <div className="notice">No tools found. Try another keyword.</div>
           ) : null}
 
-          {/* <AdSlot label="Bottom advertisement" /> */}
+          <AdSlot label="Bottom advertisement" />
         </section>
       </main>
     </>
@@ -737,32 +597,32 @@ function ToolPage({ tool }) {
     .filter(item => item.category === tool.category && item.id !== tool.id)
     .slice(0, 6);
 
-  const [seoData, setSeoData] = React.useState(null);
+    const [seoData, setSeoData] = React.useState(null);
 
-  const seoSlug = SEO_SLUGS[tool.id];
-  
-  React.useEffect(() => {
-    let cancelled = false;
-  
-    async function loadSeo() {
-      if (!seoSlug) {
-        setSeoData(null);
-        return;
+    const seoSlug = SEO_SLUGS[tool.id];
+
+    React.useEffect(() => {
+      let cancelled = false;
+
+      async function loadSeo() {
+        if (!seoSlug) {
+          setSeoData(null);
+          return;
+        }
+
+        const data = await fetchSeoContent(seoSlug);
+
+        if (!cancelled) {
+          setSeoData(data);
+        }
       }
-  
-      const data = await fetchSeoContent(seoSlug);
-  
-      if (!cancelled) {
-        setSeoData(data);
-      }
-    }
-  
-    loadSeo();
-  
-    return () => {
-      cancelled = true;
-    };
-  }, [seoSlug]);
+
+      loadSeo();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [seoSlug]);
 
     React.useEffect(() => {
       document.title = seoData?.seoTitle || makeTitle(tool);
@@ -771,6 +631,9 @@ function ToolPage({ tool }) {
         'description',
         seoData?.metaDescription || makeDescription(tool)
       );
+
+      updateMeta('robots', 'index, follow');
+    }, [tool, seoData]);
 
   return (
     <>
@@ -814,32 +677,22 @@ function ToolPage({ tool }) {
             <ToolRunner tool={tool} />
           </section>
 
-{seoData?.seoContent ? (
-  <section className="seo-content-card">
-    <div
-      dangerouslySetInnerHTML={{
-        __html: seoData.seoContent,
-      }}
-    />
-  </section>
-) : (
-  <section className="seo-content-card">
-    <h2>How to use {tool.title}</h2>
+          <section className="seo-content-card">
+            <h2>How to use {tool.title}</h2>
 
-    <ol>
-      <li>Upload or paste your input in the tool workspace.</li>
-      <li>Choose the required options if the tool asks for settings.</li>
-      <li>Click the action button and wait for the result.</li>
-      <li>Preview, copy or download the converted output.</li>
-    </ol>
+            <ol>
+              <li>Upload or paste your input in the tool workspace.</li>
+              <li>Choose the required options if the tool asks for settings.</li>
+              <li>Click the action button and wait for the result.</li>
+              <li>Preview, copy or download the converted output.</li>
+            </ol>
 
-    <p>
-      This page has a dedicated URL for SEO, so you can submit it to
-      search engines, create a sitemap and run advertisements on this
-      individual converter page.
-    </p>
-  </section>
-)}
+            <p>
+              This page has a dedicated URL for SEO, so you can submit it to
+              search engines, create a sitemap and run advertisements on this
+              individual converter page.
+            </p>
+          </section>
 
           {related.length ? (
             <section className="related-section">
@@ -1190,10 +1043,10 @@ function Footer() {
               +91 00000 00000
             </a> */}
 
-            {/* <span>
+            <span>
               <span className="footer-mini-icon"><img style={{ width: 16, height: 16 }} src="/public/location.png" alt="India" /></span>
               India
-            </span> */}
+            </span>
           </div>
 
          {/* <div className="footer-socials">
@@ -1245,14 +1098,14 @@ function Footer() {
         <div className="footer-column">
           <h3>Required Links</h3>
 
-          <div className="footer-link-list">
+          <div className="footer-link-list" >
             <a href="/about">About ConvertNest</a>
             <a href="/contact">Contact</a>
             <a href="/privacy-policy">Privacy Policy</a>
             <a href="/terms-and-conditions">Terms & Conditions</a>
             <a href="/disclaimer">Disclaimer</a>
             <a href="/cookie-policy">Cookie Policy</a>
-            {/* <a href="/sitemap.xml">Sitemap</a> */}
+            <a href="/sitemap.xml">Sitemap</a>
           </div>
         </div>
       </div>
