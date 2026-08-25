@@ -814,22 +814,32 @@ function ToolPage({ tool }) {
             <ToolRunner tool={tool} />
           </section>
 
-          <section className="seo-content-card">
-            <h2>How to use {tool.title}</h2>
+{seoData?.seoContent ? (
+  <section className="seo-content-card">
+    <div
+      dangerouslySetInnerHTML={{
+        __html: seoData.seoContent,
+      }}
+    />
+  </section>
+) : (
+  <section className="seo-content-card">
+    <h2>How to use {tool.title}</h2>
 
-            <ol>
-              <li>Upload or paste your input in the tool workspace.</li>
-              <li>Choose the required options if the tool asks for settings.</li>
-              <li>Click the action button and wait for the result.</li>
-              <li>Preview, copy or download the converted output.</li>
-            </ol>
+    <ol>
+      <li>Upload or paste your input in the tool workspace.</li>
+      <li>Choose the required options if the tool asks for settings.</li>
+      <li>Click the action button and wait for the result.</li>
+      <li>Preview, copy or download the converted output.</li>
+    </ol>
 
-            <p>
-              This page has a dedicated URL for SEO, so you can submit it to
-              search engines, create a sitemap and run advertisements on this
-              individual converter page.
-            </p>
-          </section>
+    <p>
+      This page has a dedicated URL for SEO, so you can submit it to
+      search engines, create a sitemap and run advertisements on this
+      individual converter page.
+    </p>
+  </section>
+)}
 
           {related.length ? (
             <section className="related-section">
