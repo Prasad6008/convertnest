@@ -14,7 +14,7 @@ if (!mongoUri) {
 }
 
 const excelPath = path.resolve(
-  "ConvertNest_SEO_Content(1).xlsx"
+  "ConvertNest_SEO_Content.xlsx"
 );
 
 async function importSeo() {
