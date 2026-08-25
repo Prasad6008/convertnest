@@ -555,7 +555,7 @@ function HomePage({ route }) {
         <Sidebar activeCategory={activeCategory} />
 
         <section className="content">
-          <AdSlot label="Top banner advertisement" />
+          {/* <AdSlot label="Top banner advertisement" /> */}
 
           <div className="section-head category-search-head">
             <div>
