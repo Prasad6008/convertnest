@@ -764,11 +764,13 @@ function ToolPage({ tool }) {
     };
   }, [seoSlug]);
 
-  React.useEffect(() => {
-    document.title = makeTitle(tool);
-    updateMeta('description', makeDescription(tool));
-    updateMeta('robots', 'index, follow');
-  }, [tool]);
+    React.useEffect(() => {
+      document.title = seoData?.seoTitle || makeTitle(tool);
+
+      updateMeta(
+        'description',
+        seoData?.metaDescription || makeDescription(tool)
+      );
 
   return (
     <>
