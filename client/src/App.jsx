@@ -89,6 +89,14 @@ const SEO_SLUGS = {
   'page-numbers': 'page-numbers-converter',
   'compress-pdf': 'compress-pdf-converter',
 
+  // Office tools
+  'word-to-pdf': 'word-to-pdf-converter',
+  'powerpoint-to-pdf': 'ppt-to-pdf-converter',
+  'excel-to-pdf': 'excel-to-pdf-converter',
+  'pdf-to-word': 'pdf-to-word-converter',
+  'pdf-to-powerpoint': 'pdf-to-ppt-converter',
+  'pdf-to-excel': 'pdf-to-excel-converter',
+
   // Image tools
   'jpg-png-webp': 'jpg-png-webp-converter',
   'image-compressor': 'image-compressor-converter',
@@ -142,7 +150,14 @@ const SEO_SLUGS = {
   'temperature-converter': 'temperature-converter-converter',
   'data-storage': 'data-storage-converter',
   'date-difference': 'date-difference-converter',
-  'number-to-words': 'number-to-words-converter'
+  'number-to-words': 'number-to-words-converter',
+
+  // QR tools
+  'text-url-qr-code': 'text-qr-converter',
+  'wifi-qr-code': 'wifi-qr-converter',
+  'whatsapp-qr-code': 'whatsapp-qr-converter',
+  'upi-qr-code': 'upi-qr-converter',
+  'email-qr-code': 'email-qr-converter'
 };
 
 const SLUG_TO_TOOL_ID = Object.fromEntries(
