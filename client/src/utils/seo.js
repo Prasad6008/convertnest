@@ -4,7 +4,7 @@ const API_BASE_URL =
 export async function fetchSeoContent(slug) {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/seo/${slug}`
+      `${API_BASE_URL}/api/seo/${slug}`
     );
 
     if (!response.ok) {
