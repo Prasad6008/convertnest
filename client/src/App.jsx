@@ -763,7 +763,8 @@ function ToolPage({ tool }) {
           <section className="seo-content-card">
             {seoLoading ? (
               <div>
-                <p>Loading SEO content...</p>
+                {/* <p>Loading SEO conten...</p> */}
+                <p></p>
               </div>
             ) : seoParagraphs.length ? (
               <>
