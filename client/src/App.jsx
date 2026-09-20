@@ -550,7 +550,8 @@ function HomePage({ route }) {
 
         <div className="stats-card">
           <div className="stat">
-            <strong>{allTools.length}+</strong>
+            {/* <strong>{allTools.length}+</strong> */}
+            <strong>{`50`}+</strong>
             <span>working tools</span>
           </div>
 
